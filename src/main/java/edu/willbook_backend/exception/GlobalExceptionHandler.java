@@ -85,4 +85,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity handleAutorDuplicado(AutorDuplicadoException ex) {
         return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), null);
     }
+
+    @ExceptionHandler(AutorConLibrosException.class)
+    public ResponseEntity handleAutorConLibrosAsociados(AutorConLibrosException ex) {
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), null);
+    }
 }

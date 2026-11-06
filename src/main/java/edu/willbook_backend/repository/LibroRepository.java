@@ -15,4 +15,7 @@ public interface LibroRepository extends JpaRepository<Libro, Long> {
     List<Libro> buscarPorTituloOAutor(@Param("filtro") String filtro);
 
     boolean existsByIsbn(String isbn);
+
+    // Valida si existen libros asociados al ID del autor
+    boolean existsByAutorId(Long autorId);
 }
