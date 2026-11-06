@@ -46,6 +46,12 @@ public class Usuario implements UserDetails {
     @Column(name = "rol", nullable = false)
     private Rol rol;
 
+    @Column(length = 20)
+    private String telefono;
+
+    @Column(length = 150)
+    private String direccion;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "localidad_id")
     private Localidad localidad;
