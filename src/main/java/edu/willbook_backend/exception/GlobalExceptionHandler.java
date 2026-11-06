@@ -75,4 +75,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity handleIsbnDuplicado(IsbnDuplicadoException ex) {
         return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), null);
     }
+
+    @ExceptionHandler(CategoriaDuplicadaException.class)
+    public ResponseEntity handleCategoriaDuplicada(CategoriaDuplicadaException ex) {
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), null);
+    }
 }
