@@ -23,9 +23,12 @@ public class AutorController {
     private final AutorService autorService;
 
     @GetMapping
-    @Operation(summary = "Listar todos los autores ordenados alfabéticamente por apellido")
-    public ResponseEntity<List<AutorResponseDTO>> listarAutores() {
-        return ResponseEntity.ok(autorService.listarAutores());
+    @Operation(summary = "Listar o filtrar autores por nombre/apellido")
+    public ResponseEntity<List<AutorResponseDTO>> listarOFiltrarAutores(
+            @RequestParam(required = false) String q
+    ) {
+        List<AutorResponseDTO> autores = autorService.listarOFiltrarAutores(q);
+        return ResponseEntity.ok(autores);
     }
 
     @PostMapping
