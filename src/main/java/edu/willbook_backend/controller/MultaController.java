@@ -1,5 +1,6 @@
 package edu.willbook_backend.controller;
 
+import edu.willbook_backend.dto.MultaCancelacionDTO;
 import edu.willbook_backend.dto.MultaCreateDTO;
 import edu.willbook_backend.service.MultaService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,5 +28,16 @@ public class MultaController {
     ) {
         Map<String, Object> response = multaService.crearMultaManual(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PutMapping("/{id}/cancelar")
+    @PreAuthorize("hasAnyRole('BIBLIOTECARIO', 'ADMIN')")
+    @Operation(summary = "Anular o cancelar una multa activa de un usuario (Solo Bibliotecario o Admin)")
+    public ResponseEntity cancelarMulta(
+            @PathVariable Long id,
+            @RequestBody(required = false) MultaCancelacionDTO request
+    ) {
+        Map<String, Object> response = multaService.cancelarMulta(id, request != null ? request : new MultaCancelacionDTO(null));
+        return ResponseEntity.ok(response);
     }
 }
