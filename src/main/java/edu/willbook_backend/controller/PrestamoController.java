@@ -73,4 +73,15 @@ public class PrestamoController {
 
         return ResponseEntity.ok(misPrestamos);
     }
+
+    @PutMapping("/{id}/reportar-perdida")
+    @PreAuthorize("hasAnyRole('LECTOR', 'BIBLIOTECARIO', 'ADMIN')")
+    @Operation(summary = "Reportar pérdida o daño de un libro en préstamo")
+    public ResponseEntity reportarPerdida(
+            @PathVariable Long id,
+            Principal principal
+    ) {
+        Map<String, Object> response = prestamoService.reportarLossOrDamage(id, principal.getName());
+        return ResponseEntity.ok(response);
+    }
 }

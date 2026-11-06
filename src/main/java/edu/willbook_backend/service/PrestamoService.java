@@ -14,4 +14,5 @@ public interface PrestamoService {
     Map<String, String> confirmarPrestamo(Long prestamoId);
     Map<String, String> cancelarReserva(Long prestamoId);
     List<PrestamoPersonalDTO> consultarMisPrestamos(String emailUsuario);
+    Map<String, Object> reportarLossOrDamage(Long prestamoId, String emailUsuario);
 }
