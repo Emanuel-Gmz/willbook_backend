@@ -1,5 +1,6 @@
 package edu.willbook_backend.controller;
 
+import edu.willbook_backend.dto.MisMultasResponseDTO;
 import edu.willbook_backend.dto.MultaCancelacionDTO;
 import edu.willbook_backend.dto.MultaCreateDTO;
 import edu.willbook_backend.dto.MultaPagoDTO;
@@ -12,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.Map;
 
 @RestController
@@ -50,6 +52,14 @@ public class MultaController {
             @Valid @RequestBody MultaPagoDTO request
     ) {
         Map<String, Object> response = multaService.registrarPagoMulta(id, request);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/mis-multas")
+    @PreAuthorize("hasRole('LECTOR')")
+    @Operation(summary = "Consultar estado de multas y sanciones del lector autenticado")
+    public ResponseEntity<MisMultasResponseDTO> consultarMisMultas(Principal principal) {
+        MisMultasResponseDTO response = multaService.consultarMisMultas(principal.getName());
         return ResponseEntity.ok(response);
     }
 }
