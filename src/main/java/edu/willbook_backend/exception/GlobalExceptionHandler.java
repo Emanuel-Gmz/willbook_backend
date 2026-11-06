@@ -110,4 +110,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity handleUsuarioConMultasPendientes(UsuarioConMultasPendientesException ex) {
         return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage(), null);
     }
+
+    @ExceptionHandler(EjemplarPrestadoException.class)
+    public ResponseEntity handleEjemplarPrestado(EjemplarPrestadoException ex) {
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), null);
+    }
 }
