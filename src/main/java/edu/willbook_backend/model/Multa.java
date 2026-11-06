@@ -41,4 +41,7 @@ public class Multa {
     @CreationTimestamp
     @Column(name = "fecha_generacion", nullable = false, updatable = false)
     private LocalDateTime fechaGeneracion;
+
+    @Column(nullable = false, length = 250)
+    private String motivo;
 }
