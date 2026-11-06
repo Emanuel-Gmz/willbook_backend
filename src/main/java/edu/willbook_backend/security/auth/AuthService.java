@@ -58,7 +58,13 @@ public class AuthService {
 
         String token = jwtService.generateToken(claims, usuario);
 
-        return new AuthResponse(token, "Inicio de sesión exitoso");
+        // Retornamos el token, mensaje, rol y nombre para la redirección en el cliente
+        return new AuthResponse(
+                token,
+                "Inicio de sesión exitoso",
+                usuario.getRol(),
+                usuario.getNombre() + " " + usuario.getApellido()
+        );
     }
 
     @Transactional
@@ -99,7 +105,12 @@ public class AuthService {
 
         String token = jwtService.generateToken(claims, usuario);
 
-        return new AuthResponse(token, "Registro exitoso. Ya puedes iniciar sesión");
+        return new AuthResponse(
+                token,
+                "Registro exitoso. Ya puedes iniciar sesión",
+                usuario.getRol(),
+                usuario.getNombre() + " " + usuario.getApellido()
+        );
     }
 
     @Transactional
