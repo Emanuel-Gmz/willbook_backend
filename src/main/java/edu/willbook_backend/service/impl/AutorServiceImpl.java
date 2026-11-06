@@ -27,9 +27,22 @@ public class AutorServiceImpl implements AutorService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<AutorResponseDTO> listarAutores() {
-        return autorRepository.findAllByOrderByApellidoAscNombreAsc().stream()
-                .map(a -> new AutorResponseDTO(a.getId(), a.getNombre(), a.getApellido(), a.getBiografia(), a.getPaisOrigen()))
+    public List<AutorResponseDTO> listarOFiltrarAutores(String query) {
+        List<Autor> autores;
+        if (query == null || query.isBlank()) {
+            autores = autorRepository.findAllByOrderByApellidoAscNombreAsc();
+        } else {
+            autores = autorRepository.buscarPorNombreOApellido(query.trim());
+        }
+
+        return autores.stream()
+                .map(a -> new AutorResponseDTO(
+                        a.getId(),
+                        a.getNombre(),
+                        a.getApellido(),
+                        a.getBiografia(),
+                        a.getNacionalidad()
+                ))
                 .toList();
     }
 
@@ -48,7 +61,7 @@ public class AutorServiceImpl implements AutorService {
                 .nombre(nombreTrim)
                 .apellido(apellidoTrim)
                 .biografia(request.biografia())
-                .paisOrigen(request.paisOrigen())
+                .nacionalidad(request.paisOrigen())
                 .build();
 
         Autor guardado = autorRepository.save(autor);
@@ -60,7 +73,7 @@ public class AutorServiceImpl implements AutorService {
                         guardado.getNombre(),
                         guardado.getApellido(),
                         guardado.getBiografia(),
-                        guardado.getPaisOrigen()
+                        guardado.getNacionalidad()
                 )
         );
     }
@@ -70,7 +83,7 @@ public class AutorServiceImpl implements AutorService {
     public AutorResponseDTO obtenerAutorPorId(Long id) {
         Autor autor = autorRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Autor no encontrado"));
-        return new AutorResponseDTO(autor.getId(), autor.getNombre(), autor.getApellido(), autor.getBiografia(), autor.getPaisOrigen());
+        return new AutorResponseDTO(autor.getId(), autor.getNombre(), autor.getApellido(), autor.getBiografia(), autor.getNacionalidad());
     }
 
     @Override
@@ -96,7 +109,7 @@ public class AutorServiceImpl implements AutorService {
             autor.setBiografia(request.biografia());
         }
         if (request.paisOrigen() != null) {
-            autor.setPaisOrigen(request.paisOrigen());
+            autor.setNacionalidad(request.paisOrigen());
         }
 
         Autor actualizado = autorRepository.save(autor);
@@ -108,7 +121,7 @@ public class AutorServiceImpl implements AutorService {
                         actualizado.getNombre(),
                         actualizado.getApellido(),
                         actualizado.getBiografia(),
-                        actualizado.getPaisOrigen()
+                        actualizado.getNacionalidad()
                 )
         );
     }

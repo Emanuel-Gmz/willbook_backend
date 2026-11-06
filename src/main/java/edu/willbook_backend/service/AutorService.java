@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface AutorService {
-    List<AutorResponseDTO> listarAutores();
+    List<AutorResponseDTO> listarOFiltrarAutores(String query);
     AutorResponseDTO obtenerAutorPorId(Long id);
     Map<String, Object> crearAutor(AutorCreateDTO request);
     Map<String, Object> actualizarAutor(Long id, AutorUpdateDTO request);
