@@ -70,4 +70,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity handleInvalidPassword(PasswordInvalidaException ex) {
         return buildResponse(HttpStatus.BAD_REQUEST, "Error de validación de seguridad", ex.getMessage());
     }
+
+    @ExceptionHandler(IsbnDuplicadoException.class)
+    public ResponseEntity handleIsbnDuplicado(IsbnDuplicadoException ex) {
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), null);
+    }
 }
