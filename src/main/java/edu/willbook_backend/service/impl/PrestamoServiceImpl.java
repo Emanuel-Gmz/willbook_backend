@@ -1,5 +1,6 @@
 package edu.willbook_backend.service.impl;
 
+import edu.willbook_backend.dto.PrestamoDetalleDTO;
 import edu.willbook_backend.dto.PrestamoRequestDTO;
 import edu.willbook_backend.dto.PrestamoResponseDTO;
 import edu.willbook_backend.enums.EstadoEjemplar;
@@ -25,6 +26,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -82,5 +85,68 @@ public class PrestamoServiceImpl implements PrestamoService {
                 guardado.getEstado(),
                 "Solicitud enviada. Tienes 48hs para retirar tu libro"
         );
+    }
+    @Override
+    @Transactional(readOnly = true)
+    public List<PrestamoDetalleDTO> listarSolicitudesPendientes() {
+        return prestamoRepository.findByEstado(EstadoPrestamo.PENDIENTE_RETIRO).stream()
+                .map(p -> new PrestamoDetalleDTO(
+                        p.getId(),
+                        p.getUsuario().getId(),
+                        p.getUsuario().getNombre() + " " + p.getUsuario().getApellido(),
+                        p.getUsuario().getEmail(),
+                        p.getEjemplar().getLibro().getId(),
+                        p.getEjemplar().getLibro().getTitulo(),
+                        p.getEjemplar().getCodigoInventario(),
+                        p.getFechaSolicitud(),
+                        p.getEstado()
+                ))
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public Map<String, String> confirmarPrestamo(Long prestamoId) {
+        Prestamo prestamo = prestamoRepository.findById(prestamoId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitud de préstamo no encontrada"));
+
+        if (prestamo.getEstado() != EstadoPrestamo.PENDIENTE_RETIRO) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Esta solicitud no se encuentra pendiente de retiro");
+        }
+
+        // 1. Actualizar estado del préstamo, fijar fecha de retiro y cálculo límite (14 días) (Escenario 1)
+        prestamo.setEstado(EstadoPrestamo.PRESTADO);
+        prestamo.setFechaRetiro(LocalDateTime.now());
+        prestamo.setFechaDevolucionEsperada(LocalDateTime.now().plusDays(14));
+        prestamoRepository.save(prestamo);
+
+        // 2. Cambiar estado del ejemplar de RESERVADO a PRESTADO
+        Ejemplar ejemplar = prestamo.getEjemplar();
+        ejemplar.setEstado(EstadoEjemplar.PRESTADO);
+        ejemplarRepository.save(ejemplar);
+
+        return Map.of("message", "Préstamo registrado exitosamente");
+    }
+
+    @Override
+    @Transactional
+    public Map<String, String> cancelarReserva(Long prestamoId) {
+        Prestamo prestamo = prestamoRepository.findById(prestamoId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitud de préstamo no encontrada"));
+
+        if (prestamo.getEstado() != EstadoPrestamo.PENDIENTE_RETIRO) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Solo se pueden cancelar solicitudes pendientes de retiro");
+        }
+
+        // 1. Cambiar estado del préstamo a cancelado (Escenario 2)
+        prestamo.setEstado(EstadoPrestamo.CANCELADO);
+        prestamoRepository.save(prestamo);
+
+        // 2. Liberar el ejemplar devolviéndolo a estado DISPONIBLE
+        Ejemplar ejemplar = prestamo.getEjemplar();
+        ejemplar.setEstado(EstadoEjemplar.DISPONIBLE);
+        ejemplarRepository.save(ejemplar);
+
+        return Map.of("message", "Reserva cancelada y ejemplar liberado exitosamente");
     }
 }
