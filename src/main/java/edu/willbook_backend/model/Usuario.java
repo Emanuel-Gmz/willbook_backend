@@ -52,6 +52,7 @@ public class Usuario implements UserDetails {
     @Column(length = 150)
     private String direccion;
 
+    // Relación ManyToOne con Localidad
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "localidad_id")
     private Localidad localidad;
