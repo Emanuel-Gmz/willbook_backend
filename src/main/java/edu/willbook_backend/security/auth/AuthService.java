@@ -6,12 +6,16 @@ import edu.willbook_backend.exception.DniYaRegistradoException;
 import edu.willbook_backend.exception.EmailYaRegistradoException;
 import edu.willbook_backend.exception.PasswordInvalidaException;
 import edu.willbook_backend.model.Localidad;
+import edu.willbook_backend.model.PasswordResetToken;
 import edu.willbook_backend.model.Usuario;
 import edu.willbook_backend.repository.LocalidadRepository;
+import edu.willbook_backend.repository.PasswordResetTokenRepository;
 import edu.willbook_backend.repository.UsuarioRepository;
 import edu.willbook_backend.security.dto.AuthRequest;
 import edu.willbook_backend.security.dto.AuthResponse;
+import edu.willbook_backend.security.dto.OlvidoPasswordRequest;
 import edu.willbook_backend.security.jwt.JwtService;
+import edu.willbook_backend.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -21,8 +25,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +40,8 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final PasswordResetTokenRepository resetTokenRepository;
+    private final EmailService emailService;
 
     public AuthResponse authenticate(AuthRequest request) {
         authenticationManager.authenticate(
@@ -91,5 +100,52 @@ public class AuthService {
         String token = jwtService.generateToken(claims, usuario);
 
         return new AuthResponse(token, "Registro exitoso. Ya puedes iniciar sesión");
+    }
+
+    @Transactional
+    public void requestPasswordReset(OlvidoPasswordRequest request) {
+        Usuario user = usuarioRepository.findByEmail(request.email()).orElse(null);
+
+        // Por seguridad, si el usuario no existe, no lanzamos excepción para no revelar qué correos están registrados
+        if (user == null) {
+            return;
+        }
+
+        // Evitar spam de correos verificando si se solicitó uno recientemente (ej. menos de 2 minutos)
+        Optional<PasswordResetToken> tokenPrevio = resetTokenRepository.findByUsuario(user);
+
+        if (tokenPrevio.isPresent()) {
+            LocalDateTime fechaCreacionEstimada = tokenPrevio.get().getExpiryDate().minusMinutes(15);
+            if (fechaCreacionEstimada.plusMinutes(2).isAfter(LocalDateTime.now())) {
+                throw new ResponseStatusException(
+                        HttpStatus.TOO_MANY_REQUESTS,
+                        "Ya enviamos un enlace a tu correo. Por favor, espera al menos 2 minutos antes de solicitar otro."
+                );
+            }
+        }
+
+        // Limpiar tokens anteriores de este usuario
+        resetTokenRepository.deleteByUsuario(user);
+        resetTokenRepository.flush();
+
+        // Generar un token aleatorio con vigencia de 15 minutos
+        String token = UUID.randomUUID().toString();
+        PasswordResetToken resetToken = PasswordResetToken.builder()
+                .token(token)
+                .usuario(user)
+                .expiryDate(LocalDateTime.now().plusMinutes(15))
+                .build();
+
+        resetTokenRepository.save(resetToken);
+
+        // Enviar correo de forma asíncrona
+        try {
+            emailService.sendPasswordResetEmail(user.getEmail(), token);
+        } catch (Exception e) {
+            throw new ResponseStatusException(
+                    HttpStatus.TOO_MANY_REQUESTS,
+                    "No se pudo enviar el correo en este momento. Inténtalo más tarde."
+            );
+        }
     }
 }
