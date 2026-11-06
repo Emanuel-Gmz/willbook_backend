@@ -1,10 +1,14 @@
 package edu.willbook_backend.controller;
 
+import edu.willbook_backend.dto.LibroCreateDTO;
 import edu.willbook_backend.dto.LibroResponseDTO;
 import edu.willbook_backend.service.LibroService;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,5 +37,15 @@ public class LibroController {
         }
 
         return ResponseEntity.ok(resultados);
+    }
+
+    @PostMapping("/crear")
+    @PreAuthorize("hasAnyRole('BIBLIOTECARIO', 'ADMIN')")
+    @Operation(summary = "Registrar un nuevo libro en el catálogo")
+    public ResponseEntity crearLibro(
+            @Valid @RequestBody LibroCreateDTO request
+    ) {
+        Map<String, Object> response = libroService.crearLibro(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }
