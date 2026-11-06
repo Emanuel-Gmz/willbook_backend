@@ -1,4 +1,3 @@
-[readme_backend.md](https://github.com/user-attachments/files/34494861/readme_backend.md)
 # WillBook - Backend API
 
 Este es el proyecto backend para el sistema de gestión de bibliotecas **WillBook**. Está desarrollado en **Java con Spring Boot** y expone una API RESTful asegurada mediante **JWT (JSON Web Tokens)**.
