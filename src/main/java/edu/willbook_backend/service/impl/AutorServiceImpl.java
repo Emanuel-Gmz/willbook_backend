@@ -2,13 +2,16 @@ package edu.willbook_backend.service.impl;
 
 import edu.willbook_backend.dto.AutorCreateDTO;
 import edu.willbook_backend.dto.AutorResponseDTO;
+import edu.willbook_backend.dto.AutorUpdateDTO;
 import edu.willbook_backend.exception.AutorDuplicadoException;
 import edu.willbook_backend.model.Autor;
 import edu.willbook_backend.repository.AutorRepository;
 import edu.willbook_backend.service.AutorService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Map;
@@ -55,6 +58,54 @@ public class AutorServiceImpl implements AutorService {
                         guardado.getApellido(),
                         guardado.getBiografia(),
                         guardado.getPaisOrigen()
+                )
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AutorResponseDTO obtenerAutorPorId(Long id) {
+        Autor autor = autorRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Autor no encontrado"));
+        return new AutorResponseDTO(autor.getId(), autor.getNombre(), autor.getApellido(), autor.getBiografia(), autor.getPaisOrigen());
+    }
+
+    @Override
+    @Transactional
+    public Map<String, Object> actualizarAutor(Long id, AutorUpdateDTO request) {
+        Autor autor = autorRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Autor no encontrado"));
+
+        // Validar si cambia nombre/apellido que no colisione con otro existente
+        String nuevoNombre = request.nombre() != null ? request.nombre().trim() : autor.getNombre();
+        String nuevoApellido = request.apellido() != null ? request.apellido().trim() : autor.getApellido();
+
+        if ((request.nombre() != null || request.apellido() != null) &&
+                (!nuevoNombre.equalsIgnoreCase(autor.getNombre()) || !nuevoApellido.equalsIgnoreCase(autor.getApellido()))) {
+            if (autorRepository.existsByNombreIgnoreCaseAndApellidoIgnoreCase(nuevoNombre, nuevoApellido)) {
+                throw new AutorDuplicadoException("Ya existe otro autor registrado con ese nombre y apellido");
+            }
+        }
+
+        autor.setNombre(nuevoNombre);
+        autor.setApellido(nuevoApellido);
+        if (request.biografia() != null) {
+            autor.setBiografia(request.biografia());
+        }
+        if (request.paisOrigen() != null) {
+            autor.setPaisOrigen(request.paisOrigen());
+        }
+
+        Autor actualizado = autorRepository.save(autor);
+
+        return Map.of(
+                "message", "Autor actualizado correctamente",
+                "autor", new AutorResponseDTO(
+                        actualizado.getId(),
+                        actualizado.getNombre(),
+                        actualizado.getApellido(),
+                        actualizado.getBiografia(),
+                        actualizado.getPaisOrigen()
                 )
         );
     }
