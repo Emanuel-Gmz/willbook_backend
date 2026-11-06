@@ -10,10 +10,7 @@ import edu.willbook_backend.enums.EstadoPrestamo;
 import edu.willbook_backend.exception.LibroSinStockException;
 import edu.willbook_backend.exception.UsuarioConMultasPendientesException;
 import edu.willbook_backend.exception.UsuarioNoEncontradoException;
-import edu.willbook_backend.model.Ejemplar;
-import edu.willbook_backend.model.Libro;
-import edu.willbook_backend.model.Prestamo;
-import edu.willbook_backend.model.Usuario;
+import edu.willbook_backend.model.*;
 import edu.willbook_backend.repository.EjemplarRepository;
 import edu.willbook_backend.repository.LibroRepository;
 import edu.willbook_backend.repository.MultaRepository;
@@ -201,5 +198,47 @@ public class PrestamoServiceImpl implements PrestamoService {
                     esAtrasado
             );
         }).toList();
+    }
+
+    @Override
+    @Transactional
+    public Map<String, Object> reportarLossOrDamage(Long prestamoId, String emailUsuario) {
+        Prestamo prestamo = prestamoRepository.findById(prestamoId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Préstamo no encontrado"));
+
+        // Validar que el préstamo pertenezca al usuario autenticado (o sea ejecutado por un bibliotecario)
+        Usuario usuario = usuarioRepository.findByEmail(emailUsuario)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+
+        if (usuario.getRol() == edu.willbook_backend.enums.Rol.LECTOR && !prestamo.getUsuario().getId().equals(usuario.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tienes permisos sobre este préstamo");
+        }
+
+        if (prestamo.getEstado() != EstadoPrestamo.PRESTADO && prestamo.getEstado() != EstadoPrestamo.RETIRADO) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Solo se pueden reportar como perdidos préstamos activos en curso");
+        }
+
+        // 1. Cambiar estado del préstamo a EXTRAVIADO (frena multas por atraso)
+        prestamo.setEstado(EstadoPrestamo.EXTRAVIADO);
+        prestamoRepository.save(prestamo);
+
+        // 2. Dar de baja automática el ejemplar físico del stock
+        Ejemplar ejemplar = prestamo.getEjemplar();
+        ejemplar.setEstado(EstadoEjemplar.EXTRAVIADO);
+        ejemplarRepository.save(ejemplar);
+
+        // 3. Generar sanción administrativa / Multa de reposición requerida que bloquea nuevos retiros
+        Multa sancionReposicion = Multa.builder()
+                .usuario(prestamo.getUsuario())
+                .prestamo(prestamo)
+                .monto(java.math.BigDecimal.ZERO) // O el costo del libro si está definido
+                .estado(EstadoMulta.PENDIENTE)
+                .build();
+        multaRepository.save(sancionReposicion);
+
+        return Map.of(
+                "message", "Reporte registrado con éxito. El estado cambió a Extraviado y se generó una sanción de reposición pendiente. Debes comunicarte con administración.",
+                "prestamoId", prestamo.getId()
+        );
     }
 }
