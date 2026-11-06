@@ -73,15 +73,12 @@ public class AuthService {
         if (!request.password().equals(request.confirmacionPassword())) {
             throw new PasswordInvalidaException("Las contraseñas no coinciden");
         }
-
         if (usuarioRepository.existsByDni(request.dni())) {
             throw new DniYaRegistradoException("Este DNI ya se encuentra registrado en WillBook");
         }
-
         if (usuarioRepository.existsByEmail(request.email())) {
             throw new EmailYaRegistradoException("El correo electrónico ya se encuentra registrado");
         }
-
         Localidad localidad = localidadRepository.findById(request.localidadId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Localidad no encontrada"));
 
@@ -96,7 +93,11 @@ public class AuthService {
                 .activo(true)
                 .build();
 
+        // 1. Guardamos el usuario
         usuarioRepository.save(usuario);
+
+        // 2. FORZAMOS el volcado a la BD para que loadUserByUsername() lo encuentre de inmediato
+        usuarioRepository.flush();
 
         Map<String, Object> claims = new HashMap<>();
         claims.put("rol", usuario.getRol().name());

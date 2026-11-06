@@ -14,6 +14,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     Optional<Usuario> findByEmail(String email);
     boolean existsByEmail(String email);
     boolean existsByDni(String dni);
+    Optional<Usuario> findByDni(String dni);
     // Búsqueda por DNI, Nombre o Apellido para el panel del bibliotecario
     @Query("SELECT u FROM Usuario u WHERE LOWER(u.dni) LIKE LOWER(CONCAT('%', :filtro, '%')) " +
             "OR LOWER(u.nombre) LIKE LOWER(CONCAT('%', :filtro, '%')) " +

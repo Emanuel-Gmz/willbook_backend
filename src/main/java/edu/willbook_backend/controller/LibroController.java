@@ -1,5 +1,6 @@
 package edu.willbook_backend.controller;
 
+import edu.willbook_backend.dto.EjemplarCreateDTO;
 import edu.willbook_backend.dto.LibroCreateDTO;
 import edu.willbook_backend.dto.LibroResponseDTO;
 import edu.willbook_backend.dto.LibroUpdateDTO;
@@ -65,5 +66,16 @@ public class LibroController {
     ) {
         Map<String, Object> response = libroService.actualizarLibro(id, request);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{id}/ejemplares")
+    @PreAuthorize("hasAnyRole('BIBLIOTECARIO', 'ADMIN')")
+    @Operation(summary = "Agregar un nuevo ejemplar físico a un libro del catálogo")
+    public ResponseEntity agregarEjemplar(
+            @PathVariable Long id,
+            @Valid @RequestBody EjemplarCreateDTO request
+    ) {
+        Map<String, Object> response = libroService.agregarEjemplar(id, request.codigoInventario());
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

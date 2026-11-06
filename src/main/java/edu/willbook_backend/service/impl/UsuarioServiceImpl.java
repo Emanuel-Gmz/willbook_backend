@@ -44,9 +44,12 @@ public class UsuarioServiceImpl implements UsuarioService, UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return usuarioRepository.findByEmail(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con email: " + username));
+    public UserDetails loadUserByUsername(String identificador) throws UsernameNotFoundException {
+        // Buscamos primero por email, y si no existe, intentamos buscar por DNI
+        return usuarioRepository.findByEmail(identificador)
+                .orElseGet(() -> usuarioRepository.findByDni(identificador)
+                        .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con email o DNI: " + identificador))
+                );
     }
 
     @Override

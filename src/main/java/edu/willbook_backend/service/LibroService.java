@@ -13,4 +13,5 @@ public interface LibroService {
     LibroResponseDTO obtenerLibroPorId(Long id); // Para la precarga de datos
     Map<String, Object> crearLibro(LibroCreateDTO request);
     Map<String, Object> actualizarLibro(Long id, LibroUpdateDTO request); // Edición
+    Map<String, Object> agregarEjemplar(Long libroId, String codigoInventario);
 }

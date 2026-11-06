@@ -1,6 +1,7 @@
 package edu.willbook_backend.service.impl;
 
 import edu.willbook_backend.dto.*;
+import edu.willbook_backend.enums.EstadoEjemplar;
 import edu.willbook_backend.exception.AutorNoEncontradoException;
 import edu.willbook_backend.exception.CategoriaNoEncontradaException;
 import edu.willbook_backend.exception.IsbnDuplicadoException;
@@ -170,6 +171,31 @@ public class LibroServiceImpl implements LibroService {
                 l.getDescripcion(),
                 l.getDisponible(),
                 ejemplaresDTO
+        );
+    }
+
+    @Override
+    @Transactional
+    public Map<String, Object> agregarEjemplar(Long libroId, String codigoInventario) {
+        Libro libro = libroRepository.findById(libroId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Libro no encontrado"));
+
+        // Validar que el código de inventario no exista previamente
+        if (ejemplarRepository.findByCodigoInventario(codigoInventario.trim()).isPresent()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "El código de inventario ya se encuentra registrado");
+        }
+
+        Ejemplar ejemplar = Ejemplar.builder()
+                .libro(libro)
+                .codigoInventario(codigoInventario.trim())
+                .estado(EstadoEjemplar.DISPONIBLE)
+                .build();
+
+        Ejemplar guardado = ejemplarRepository.save(ejemplar);
+
+        return Map.of(
+                "message", "Ejemplar agregado correctamente al inventario",
+                "ejemplar", new EjemplarResponseDTO(guardado.getId(), guardado.getCodigoInventario(), guardado.getEstado())
         );
     }
 }

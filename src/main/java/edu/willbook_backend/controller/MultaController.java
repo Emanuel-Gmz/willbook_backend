@@ -24,7 +24,7 @@ public class MultaController {
     private final MultaService multaService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('BIBLIOTECARIO', 'ADMIN')")
     @Operation(summary = "Registrar o cargar una multa manualmente en la cuenta de un usuario")
     public ResponseEntity crearMultaManual(
             @Valid @RequestBody MultaCreateDTO request
