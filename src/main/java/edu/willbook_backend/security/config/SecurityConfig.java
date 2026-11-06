@@ -56,6 +56,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/localidades").permitAll()
                         .requestMatchers("/api/v1/auth/forgot-password").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/catalogo/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/localidades").permitAll()
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().authenticated()
                 ).authenticationProvider(authenticationProvider())
