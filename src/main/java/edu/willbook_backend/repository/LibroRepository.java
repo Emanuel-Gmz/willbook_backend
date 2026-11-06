@@ -11,11 +11,13 @@ import java.util.List;
 @Repository
 public interface LibroRepository extends JpaRepository<Libro, Long> {
 
-    @Query("SELECT l FROM Libro l WHERE LOWER(l.titulo) LIKE LOWER(CONCAT('%', :filtro, '%')) OR LOWER(l.autor) LIKE LOWER(CONCAT('%', :filtro, '%'))")
+    @Query("SELECT l FROM Libro l WHERE LOWER(l.titulo) LIKE LOWER(CONCAT('%', :filtro, '%')) OR LOWER(l.autor.nombre) LIKE LOWER(CONCAT('%', :filtro, '%')) OR LOWER(l.autor.apellido) LIKE LOWER(CONCAT('%', :filtro, '%'))")
     List<Libro> buscarPorTituloOAutor(@Param("filtro") String filtro);
 
     boolean existsByIsbn(String isbn);
 
-    // Valida si existen libros asociados al ID del autor
+    // Valida si el ISBN ya pertenece a otro libro diferente al ID actual (Escenario 2)
+    boolean existsByIsbnAndIdNot(String isbn, Long id);
+
     boolean existsByAutorId(Long autorId);
 }

@@ -2,6 +2,7 @@ package edu.willbook_backend.controller;
 
 import edu.willbook_backend.dto.LibroCreateDTO;
 import edu.willbook_backend.dto.LibroResponseDTO;
+import edu.willbook_backend.dto.LibroUpdateDTO;
 import edu.willbook_backend.service.LibroService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -47,5 +48,22 @@ public class LibroController {
     ) {
         Map<String, Object> response = libroService.crearLibro(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Obtener detalle de un libro por ID para precargar en formulario - Público")
+    public ResponseEntity<LibroResponseDTO> obtenerLibro(@PathVariable Long id) {
+        return ResponseEntity.ok(libroService.obtenerLibroPorId(id));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('BIBLIOTECARIO', 'ADMIN')")
+    @Operation(summary = "Modificar la información de un libro existente en el catálogo (Solo Bibliotecario o Admin)")
+    public ResponseEntity actualizarLibro(
+            @PathVariable Long id,
+            @Valid @RequestBody LibroUpdateDTO request
+    ) {
+        Map<String, Object> response = libroService.actualizarLibro(id, request);
+        return ResponseEntity.ok(response);
     }
 }

@@ -2,6 +2,7 @@ package edu.willbook_backend.service.impl;
 
 import edu.willbook_backend.dto.LibroCreateDTO;
 import edu.willbook_backend.dto.LibroResponseDTO;
+import edu.willbook_backend.dto.LibroUpdateDTO;
 import edu.willbook_backend.exception.AutorNoEncontradoException;
 import edu.willbook_backend.exception.CategoriaNoEncontradaException;
 import edu.willbook_backend.exception.IsbnDuplicadoException;
@@ -13,8 +14,10 @@ import edu.willbook_backend.repository.CategoriaRepository;
 import edu.willbook_backend.repository.LibroRepository;
 import edu.willbook_backend.service.LibroService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Map;
@@ -76,6 +79,69 @@ public class LibroServiceImpl implements LibroService {
         return Map.of(
                 "message", "Libro cargado exitosamente",
                 "libro", mapearADTO(guardado)
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public LibroResponseDTO obtenerLibroPorId(Long id) {
+        Libro libro = libroRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Libro no encontrado"));
+        return mapearADTO(libro);
+    }
+
+    @Override
+    @Transactional
+    public Map<String, Object> actualizarLibro(Long id, LibroUpdateDTO request) {
+        Libro libro = libroRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Libro no encontrado"));
+
+        // Validar si se modifica el ISBN que no pertenezca a otro libro (Escenario 2)
+        if (request.isbn() != null && !request.isbn().equals(libro.getIsbn())) {
+            if (libroRepository.existsByIsbnAndIdNot(request.isbn(), id)) {
+                throw new IsbnDuplicadoException("El ISBN ingresado ya corresponde a otro libro");
+            }
+            libro.setIsbn(request.isbn());
+        }
+
+        if (request.titulo() != null && !request.titulo().isBlank()) {
+            libro.setTitulo(request.titulo());
+        }
+        if (request.editorial() != null) {
+            libro.setEditorial(request.editorial());
+        }
+        if (request.anioPublicacion() != null) {
+            libro.setAnioPublicacion(request.anioPublicacion());
+        }
+        if (request.portadaUrl() != null) {
+            libro.setPortadaUrl(request.portadaUrl());
+        }
+        if (request.descripcion() != null) {
+            libro.setDescripcion(request.descripcion());
+        }
+        if (request.disponible() != null) {
+            libro.setDisponible(request.disponible());
+        }
+
+        // Actualizar autor si viene especificado
+        if (request.autorId() != null) {
+            Autor autor = autorRepository.findById(request.autorId())
+                    .orElseThrow(() -> new AutorNoEncontradoException(request.autorId()));
+            libro.setAutor(autor);
+        }
+
+        // Actualizar categoría si viene especificada
+        if (request.categoriaId() != null) {
+            Categoria categoria = categoriaRepository.findById(request.categoriaId())
+                    .orElseThrow(() -> new CategoriaNoEncontradaException(request.categoriaId()));
+            libro.setCategoria(categoria);
+        }
+
+        Libro actualizado = libroRepository.save(libro);
+
+        return Map.of(
+                "message", "Libro actualizado correctamente",
+                "libro", mapearADTO(actualizado)
         );
     }
 
