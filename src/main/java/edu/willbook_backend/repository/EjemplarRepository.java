@@ -14,4 +14,7 @@ public interface EjemplarRepository extends JpaRepository<Ejemplar, Long> {
 
     // Buscar todos los ejemplares de un libro
     List<Ejemplar> findByLibroId(Long libroId);
+
+    // Buscar ejemplar por su código único de inventario
+    Optional<Ejemplar> findByCodigoInventario(String codigoInventario);
 }
