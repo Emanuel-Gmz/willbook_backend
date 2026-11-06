@@ -115,4 +115,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity handleEjemplarPrestado(EjemplarPrestadoException ex) {
         return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), null);
     }
+
+    @ExceptionHandler(MultaYaProcesadaException.class)
+    public ResponseEntity handleMultaYaProcesada(MultaYaProcesadaException ex) {
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), null);
+    }
 }
