@@ -1,5 +1,7 @@
 package edu.willbook_backend.dto;
 
+import java.util.List;
+
 public record LibroResponseDTO(
         Long id,
         String titulo,
@@ -10,5 +12,6 @@ public record LibroResponseDTO(
         String categoria,
         String portadaUrl,
         String descripcion,
-        Boolean disponible
+        Boolean disponible,
+        List<EjemplarResponseDTO> ejemplares
 ) {}

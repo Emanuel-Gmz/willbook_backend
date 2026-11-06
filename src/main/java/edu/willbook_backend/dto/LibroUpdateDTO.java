@@ -1,6 +1,7 @@
 package edu.willbook_backend.dto;
 
 import jakarta.validation.constraints.Size;
+import java.util.List;
 
 public record LibroUpdateDTO(
         @Size(max = 150, message = "El título no puede superar los 150 caracteres")
@@ -23,5 +24,7 @@ public record LibroUpdateDTO(
         @Size(max = 500, message = "La descripción no puede superar los 500 caracteres")
         String descripcion,
 
-        Boolean disponible
+        Boolean disponible,
+
+        List<EjemplarUpdateDTO> ejemplares // Permite modificar o ajustar los ejemplares físicos
 ) {}

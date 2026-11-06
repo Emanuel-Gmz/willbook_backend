@@ -1,16 +1,16 @@
 package edu.willbook_backend.service.impl;
 
-import edu.willbook_backend.dto.LibroCreateDTO;
-import edu.willbook_backend.dto.LibroResponseDTO;
-import edu.willbook_backend.dto.LibroUpdateDTO;
+import edu.willbook_backend.dto.*;
 import edu.willbook_backend.exception.AutorNoEncontradoException;
 import edu.willbook_backend.exception.CategoriaNoEncontradaException;
 import edu.willbook_backend.exception.IsbnDuplicadoException;
 import edu.willbook_backend.model.Autor;
 import edu.willbook_backend.model.Categoria;
+import edu.willbook_backend.model.Ejemplar;
 import edu.willbook_backend.model.Libro;
 import edu.willbook_backend.repository.AutorRepository;
 import edu.willbook_backend.repository.CategoriaRepository;
+import edu.willbook_backend.repository.EjemplarRepository;
 import edu.willbook_backend.repository.LibroRepository;
 import edu.willbook_backend.service.LibroService;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +29,7 @@ public class LibroServiceImpl implements LibroService {
     private final LibroRepository libroRepository;
     private final AutorRepository autorRepository;
     private final CategoriaRepository categoriaRepository;
+    private final EjemplarRepository ejemplarRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -96,7 +97,7 @@ public class LibroServiceImpl implements LibroService {
         Libro libro = libroRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Libro no encontrado"));
 
-        // Validar si se modifica el ISBN que no pertenezca a otro libro (Escenario 2)
+        // 1. Validar ISBN duplicado
         if (request.isbn() != null && !request.isbn().equals(libro.getIsbn())) {
             if (libroRepository.existsByIsbnAndIdNot(request.isbn(), id)) {
                 throw new IsbnDuplicadoException("El ISBN ingresado ya corresponde a otro libro");
@@ -104,33 +105,21 @@ public class LibroServiceImpl implements LibroService {
             libro.setIsbn(request.isbn());
         }
 
-        if (request.titulo() != null && !request.titulo().isBlank()) {
-            libro.setTitulo(request.titulo());
-        }
-        if (request.editorial() != null) {
-            libro.setEditorial(request.editorial());
-        }
-        if (request.anioPublicacion() != null) {
-            libro.setAnioPublicacion(request.anioPublicacion());
-        }
-        if (request.portadaUrl() != null) {
-            libro.setPortadaUrl(request.portadaUrl());
-        }
-        if (request.descripcion() != null) {
-            libro.setDescripcion(request.descripcion());
-        }
-        if (request.disponible() != null) {
-            libro.setDisponible(request.disponible());
-        }
+        // 2. Actualizar campos básicos
+        if (request.titulo() != null && !request.titulo().isBlank()) libro.setTitulo(request.titulo());
+        if (request.editorial() != null) libro.setEditorial(request.editorial());
+        if (request.anioPublicacion() != null) libro.setAnioPublicacion(request.anioPublicacion());
+        if (request.portadaUrl() != null) libro.setPortadaUrl(request.portadaUrl());
+        if (request.descripcion() != null) libro.setDescripcion(request.descripcion());
+        if (request.disponible() != null) libro.setDisponible(request.disponible());
 
-        // Actualizar autor si viene especificado
+        // 3. Actualizar Relaciones de Autor y Categoría
         if (request.autorId() != null) {
             Autor autor = autorRepository.findById(request.autorId())
                     .orElseThrow(() -> new AutorNoEncontradoException(request.autorId()));
             libro.setAutor(autor);
         }
 
-        // Actualizar categoría si viene especificada
         if (request.categoriaId() != null) {
             Categoria categoria = categoriaRepository.findById(request.categoriaId())
                     .orElseThrow(() -> new CategoriaNoEncontradaException(request.categoriaId()));
@@ -139,6 +128,22 @@ public class LibroServiceImpl implements LibroService {
 
         Libro actualizado = libroRepository.save(libro);
 
+        // 4. Ajustar ejemplares si se envían en la petición (ej. marcar como extraviado)
+        if (request.ejemplares() != null) {
+            for (EjemplarUpdateDTO ejDto : request.ejemplares()) {
+                Ejemplar ejemplar = ejemplarRepository.findById(ejDto.id())
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ejemplar no encontrado con ID: " + ejDto.id()));
+
+                if (ejDto.estado() != null) {
+                    ejemplar.setEstado(ejDto.estado());
+                }
+                if (ejDto.codigoInventario() != null && !ejDto.codigoInventario().isBlank()) {
+                    ejemplar.setCodigoInventario(ejDto.codigoInventario());
+                }
+                ejemplarRepository.save(ejemplar);
+            }
+        }
+
         return Map.of(
                 "message", "Libro actualizado correctamente",
                 "libro", mapearADTO(actualizado)
@@ -146,9 +151,12 @@ public class LibroServiceImpl implements LibroService {
     }
 
     private LibroResponseDTO mapearADTO(Libro l) {
-        // Extraemos el nombre completo del autor y el nombre de la categoría relacionados
         String autorNombreCompleto = l.getAutor() != null ? l.getAutor().getNombre() + " " + l.getAutor().getApellido() : "Sin autor";
         String categoriaNombre = l.getCategoria() != null ? l.getCategoria().getNombre() : "Sin categoría";
+
+        List<EjemplarResponseDTO> ejemplaresDTO = ejemplarRepository.findByLibroId(l.getId()).stream()
+                .map(e -> new EjemplarResponseDTO(e.getId(), e.getCodigoInventario(), e.getEstado()))
+                .toList();
 
         return new LibroResponseDTO(
                 l.getId(),
@@ -160,7 +168,8 @@ public class LibroServiceImpl implements LibroService {
                 categoriaNombre,
                 l.getPortadaUrl(),
                 l.getDescripcion(),
-                l.getDisponible()
+                l.getDisponible(),
+                ejemplaresDTO
         );
     }
 }
