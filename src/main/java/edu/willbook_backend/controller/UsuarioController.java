@@ -1,16 +1,20 @@
 package edu.willbook_backend.controller;
 
+import edu.willbook_backend.dto.PerfilLectorCompletoDTO;
 import edu.willbook_backend.dto.PerfilResponseDTO;
 import edu.willbook_backend.dto.PerfilUpdateDTO;
+import edu.willbook_backend.dto.UsuarioBusquedaResponseDTO;
 import edu.willbook_backend.security.dto.CambiarPasswordRequest;
 import edu.willbook_backend.service.UsuarioService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -43,5 +47,23 @@ public class UsuarioController {
                 "message", "Perfil actualizado con éxito",
                 "perfil", perfilActualizado
         ));
+    }
+
+    @GetMapping("/buscar")
+    @PreAuthorize("hasAnyRole('BIBLIOTECARIO', 'ADMIN')")
+    @Operation(summary = "Buscar lectores por DNI, Nombre o Apellido (Solo Bibliotecario o Admin)")
+    public ResponseEntity<List<UsuarioBusquedaResponseDTO>> buscarLectores(
+            @RequestParam(required = false) String q
+    ) {
+        List<UsuarioBusquedaResponseDTO> resultados = usuarioService.buscarLectores(q);
+        return ResponseEntity.ok(resultados);
+    }
+
+    @GetMapping("/{id}/perfil")
+    @PreAuthorize("hasAnyRole('BIBLIOTECARIO', 'ADMIN')")
+    @Operation(summary = "Visualizar el perfil completo de un lector: datos, préstamos activos, historial y multas (Solo Bibliotecario o Admin)")
+    public ResponseEntity<PerfilLectorCompletoDTO> obtenerPerfilLector(@PathVariable Long id) {
+        PerfilLectorCompletoDTO perfil = usuarioService.obtenerPerfilLector(id);
+        return ResponseEntity.ok(perfil);
     }
 }
