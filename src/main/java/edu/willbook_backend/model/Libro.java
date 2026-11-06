@@ -23,8 +23,20 @@ public class Libro {
     @Column(nullable = false, length = 150)
     private String autor;
 
-    @Column(length = 20)
+    @Column(nullable = false, unique = true, length = 20)
     private String isbn;
+
+    @Column(length = 100)
+    private String editorial;
+
+    @Column(name = "anio_publicacion")
+    private Integer anioPublicacion;
+
+    @Column(nullable = false, length = 50)
+    private String categoria;
+
+    @Column(name = "portada_url")
+    private String portadaUrl;
 
     @Column(length = 500)
     private String descripcion;
