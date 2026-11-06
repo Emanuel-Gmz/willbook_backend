@@ -1,8 +1,6 @@
 package edu.willbook_backend.service.impl;
 
-import edu.willbook_backend.dto.MultaCancelacionDTO;
-import edu.willbook_backend.dto.MultaCreateDTO;
-import edu.willbook_backend.dto.MultaPagoDTO;
+import edu.willbook_backend.dto.*;
 import edu.willbook_backend.enums.EstadoMulta;
 import edu.willbook_backend.exception.MultaNoActivaException;
 import edu.willbook_backend.exception.MultaYaProcesadaException;
@@ -19,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -123,6 +122,80 @@ public class MultaServiceImpl implements MultaService {
                 "multaId", multa.getId(),
                 "estado", multa.getEstado().name(),
                 "usuarioBloqueado", tieneOtrasMultas
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public MisMultasResponseDTO consultarMisMultas(String emailUsuario) {
+        Usuario usuario = usuarioRepository.findByEmail(emailUsuario)
+                .orElseThrow(() -> new UsuarioNoEncontradoException(emailUsuario));
+
+        List<Multa> multas = multaRepository.findByUsuarioIdOrderByFechaGeneracionDesc(usuario.getId());
+
+        // Manejo del Escenario 2: Lector regular sin infracciones
+        if (multas.isEmpty()) {
+            return new MisMultasResponseDTO(
+                    false,
+                    "Excelente historial. No tienes multas registradas en tu cuenta.",
+                    List.of()
+            );
+        }
+
+        List<MultaPersonalDTO> multasDTO = multas.stream().map(m -> {
+            String tituloLibro = "Multa administrativa / Sin libro asociado";
+            long diasAtraso = 0;
+
+            // Si la multa está vinculada a un préstamo, obtenemos el título y calculamos los días de atraso
+            if (m.getPrestamo() != null && m.getPrestamo().getEjemplar() != null) {
+                tituloLibro = m.getPrestamo().getEjemplar().getLibro().getTitulo();
+                if (m.getPrestamo().getFechaDevolucionEsperada() != null && m.getPrestamo().getFechaDevolucionReal() != null) {
+                    if (m.getPrestamo().getFechaDevolucionReal().isAfter(m.getPrestamo().getFechaDevolucionEsperada())) {
+                        diasAtraso = java.time.temporal.ChronoUnit.DAYS.between(
+                                m.getPrestamo().getFechaDevolucionEsperada(),
+                                m.getPrestamo().getFechaDevolucionReal()
+                        );
+                    }
+                } else if (m.getPrestamo().getFechaDevolucionEsperada() != null && LocalDateTime.now().isAfter(m.getPrestamo().getFechaDevolucionEsperada())) {
+                    diasAtraso = java.time.temporal.ChronoUnit.DAYS.between(
+                            m.getPrestamo().getFechaDevolucionEsperada(),
+                            LocalDateTime.now()
+                    );
+                }
+            }
+
+            // Mapeo de estado visual según los criterios de aceptación
+            String estadoVisual;
+            if (m.getEstado() == EstadoMulta.PENDIENTE) {
+                estadoVisual = "Activa";
+            } else {
+                estadoVisual = "Resuelta"; // Incluye Pagada o Cancelada
+            }
+
+            return new MultaPersonalDTO(
+                    m.getId(),
+                    tituloLibro,
+                    diasAtraso,
+                    m.getFechaGeneracion(),
+                    m.getEstado(),
+                    estadoVisual,
+                    m.getMonto(),
+                    m.getMotivo()
+            );
+        }).toList();
+
+        // Verificar si existe al menos una multa Activa (PENDIENTE)
+        boolean tieneMultaActiva = multasDTO.stream().anyMatch(m -> m.estadoInterno() == EstadoMulta.PENDIENTE);
+
+        // Mensaje del banner para el Escenario 1 o estado regular
+        String mensajeBanner = tieneMultaActiva
+                ? "Tu cuenta está temporalmente suspendida para nuevos préstamos."
+                : "Excelente historial. No tienes multas pendientes en tu cuenta.";
+
+        return new MisMultasResponseDTO(
+                tieneMultaActiva,
+                mensajeBanner,
+                multasDTO
         );
     }
 }
