@@ -80,4 +80,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity handleCategoriaDuplicada(CategoriaDuplicadaException ex) {
         return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), null);
     }
+
+    @ExceptionHandler(AutorDuplicadoException.class)
+    public ResponseEntity handleAutorDuplicado(AutorDuplicadoException ex) {
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), null);
+    }
 }
