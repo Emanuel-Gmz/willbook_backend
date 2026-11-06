@@ -100,4 +100,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity handleCategoriaNoEncontrado(CategoriaNoEncontradaException ex) {
         return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), null);
     }
+
+    @ExceptionHandler(LibroSinStockException.class)
+    public ResponseEntity handleLibroSinStock(LibroSinStockException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), null);
+    }
+
+    @ExceptionHandler(UsuarioConMultasPendientesException.class)
+    public ResponseEntity handleUsuarioConMultasPendientes(UsuarioConMultasPendientesException ex) {
+        return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage(), null);
+    }
 }
