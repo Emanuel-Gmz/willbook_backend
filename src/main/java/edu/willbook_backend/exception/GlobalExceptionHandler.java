@@ -7,6 +7,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.security.authentication.BadCredentialsException;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -44,5 +45,29 @@ public class GlobalExceptionHandler {
             response.put("details", details);
         }
         return new ResponseEntity<>(response, status);
+    }
+
+    // Intercepta credenciales incorrectas (Escenario 3)
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity handleBadCredentials(BadCredentialsException ex) {
+        return buildResponse(HttpStatus.UNAUTHORIZED, "Usuario o contraseña incorrectos", null);
+    }
+
+    // Manejo de email duplicado (409)
+    @ExceptionHandler(EmailYaRegistradoException.class)
+    public ResponseEntity handleEmailAlreadyRegistered(EmailYaRegistradoException ex) {
+        return buildResponse(HttpStatus.CONFLICT, "Conflicto de registro", ex.getMessage());
+    }
+
+    // Manejo de DNI duplicado (409)
+    @ExceptionHandler(DniYaRegistradoException.class)
+    public ResponseEntity handleDniAlreadyRegistered(DniYaRegistradoException ex) {
+        return buildResponse(HttpStatus.CONFLICT, "Conflicto de registro", ex.getMessage());
+    }
+
+    // Manejo de contraseñas que no coinciden (400)
+    @ExceptionHandler(PasswordInvalidaException.class)
+    public ResponseEntity handleInvalidPassword(PasswordInvalidaException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, "Error de validación de seguridad", ex.getMessage());
     }
 }
