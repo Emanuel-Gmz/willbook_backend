@@ -23,25 +23,23 @@ public class HomeController {
     private final UsuarioRepository usuarioRepository;
 
     @GetMapping
-    @Operation(summary = "Obtener datos de inicio personalizados según el rol del usuario autenticado")
+    @Operation(summary = "Obtener datos de inicio ")
     public ResponseEntity obtenerInicioPorPerfil(Principal principal) {
         Usuario usuario = usuarioRepository.findByEmail(principal.getName())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
 
         if (usuario.getRol() == Rol.LECTOR) {
-            // Datos iniciales para el Lector (Escenario 1)
             return ResponseEntity.ok(Map.of(
                     "vista", "CATALOGO",
                     "mensaje", "Bienvenido al catálogo de libros de WillBook",
-                    "prestamosActivosCount", 0 // Aquí conectaremos el servicio de préstamos próximamente
+                    "prestamosActivosCount", 0
             ));
         } else if (usuario.getRol() == Rol.BIBLIOTECARIO || usuario.getRol() == Rol.ADMIN) {
-            // Datos iniciales para el Dashboard del Bibliotecario/Admin (Escenario 2)
             return ResponseEntity.ok(Map.of(
                     "vista", "DASHBOARD",
                     "mensaje", "Panel de control administrativo",
-                    "retirosPendientesCount", 0, // Aquí conectaremos solicitudes pendientes
-                    "alertasMultasCount", 0     // Aquí conectaremos alertas de multas
+                    "retirosPendientesCount", 0,
+                    "alertasMultasCount", 0
             ));
         }
 
