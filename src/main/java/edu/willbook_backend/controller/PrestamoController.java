@@ -1,6 +1,7 @@
 package edu.willbook_backend.controller;
 
 import edu.willbook_backend.dto.PrestamoDetalleDTO;
+import edu.willbook_backend.dto.PrestamoPersonalDTO;
 import edu.willbook_backend.dto.PrestamoRequestDTO;
 import edu.willbook_backend.dto.PrestamoResponseDTO;
 import edu.willbook_backend.service.PrestamoService;
@@ -54,5 +55,22 @@ public class PrestamoController {
     public ResponseEntity cancelarReserva(@PathVariable Long id) {
         Map<String, String> response = prestamoService.cancelarReserva(id);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/mis-prestamos")
+    @PreAuthorize("hasRole('LECTOR')")
+    @Operation(summary = "Consultar lista personal de préstamos e historial del lector autenticado")
+    public ResponseEntity<Object> consultarMisPrestamos(Principal principal) {
+        List<PrestamoPersonalDTO> misPrestamos = prestamoService.consultarMisPrestamos(principal.getName());
+
+        // Manejo del Escenario 2: Lector nuevo sin historial
+        if (misPrestamos.isEmpty()) {
+            return ResponseEntity.ok(Map.of(
+                    "mensaje", "Aún no has solicitado ningún libro. ¡Explora el catálogo!",
+                    "prestamos", List.of()
+            ));
+        }
+
+        return ResponseEntity.ok(misPrestamos);
     }
 }

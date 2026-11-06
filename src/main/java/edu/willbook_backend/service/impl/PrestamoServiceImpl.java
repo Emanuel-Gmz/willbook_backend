@@ -1,6 +1,7 @@
 package edu.willbook_backend.service.impl;
 
 import edu.willbook_backend.dto.PrestamoDetalleDTO;
+import edu.willbook_backend.dto.PrestamoPersonalDTO;
 import edu.willbook_backend.dto.PrestamoRequestDTO;
 import edu.willbook_backend.dto.PrestamoResponseDTO;
 import edu.willbook_backend.enums.EstadoEjemplar;
@@ -148,5 +149,57 @@ public class PrestamoServiceImpl implements PrestamoService {
         ejemplarRepository.save(ejemplar);
 
         return Map.of("message", "Reserva cancelada y ejemplar liberado exitosamente");
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PrestamoPersonalDTO> consultarMisPrestamos(String emailUsuario) {
+        Usuario usuario = usuarioRepository.findByEmail(emailUsuario)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+
+        List<Prestamo> prestamos = prestamoRepository.findByUsuarioIdOrderByFechaSolicitudDesc(usuario.getId());
+
+        LocalDateTime ahora = LocalDateTime.now();
+
+        return prestamos.stream().map(p -> {
+            String titulo = p.getEjemplar().getLibro().getTitulo();
+            String portada = p.getEjemplar().getLibro().getPortadaUrl();
+            String codigo = p.getEjemplar().getCodigoInventario();
+
+            String estadoVisual;
+            boolean esAtrasado = false;
+
+            // Lógica de cálculo de estado visual según Criterios de Aceptación
+            if (p.getEstado() == EstadoPrestamo.PENDIENTE_RETIRO) {
+                estadoVisual = "Pendiente de Retiro";
+            } else if (p.getEstado() == EstadoPrestamo.DEVUELTO) {
+                estadoVisual = "Devuelto";
+            } else if (p.getEstado() == EstadoPrestamo.PRESTADO || p.getEstado() == EstadoPrestamo.RETIRADO) {
+                // Verificar si superó la fecha límite esperada
+                if (p.getFechaDevolucionEsperada() != null && ahora.isAfter(p.getFechaDevolucionEsperada())) {
+                    estadoVisual = "Vencido/Atrasado";
+                    esAtrasado = true;
+                } else {
+                    estadoVisual = "Vigente";
+                }
+            } else {
+                estadoVisual = p.getEstado().name();
+            }
+
+            return new PrestamoPersonalDTO(
+                    p.getId(),
+                    p.getEjemplar().getLibro().getId(),
+                    titulo,
+                    portada,
+                    codigo,
+                    p.getFechaSolicitud(),
+                    p.getFechaRetiro(),
+                    p.getFechaDevolucionEsperada(),
+                    p.getFechaDevolucionReal(),
+                    p.getEstado(),
+                    estadoVisual,
+                    esAtrasado
+            );
+        }).toList();
     }
 }

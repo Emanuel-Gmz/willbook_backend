@@ -10,4 +10,7 @@ import java.util.List;
 @Repository
 public interface PrestamoRepository extends JpaRepository<Prestamo, Long> {
     List<Prestamo> findByEstado(EstadoPrestamo estado);
+
+    // Buscar todos los préstamos de un usuario ordenados por fecha de solicitud descendente
+    List<Prestamo> findByUsuarioIdOrderByFechaSolicitudDesc(Long usuarioId);
 }
