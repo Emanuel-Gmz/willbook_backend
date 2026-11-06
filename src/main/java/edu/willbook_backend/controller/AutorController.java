@@ -54,4 +54,12 @@ public class AutorController {
         Map<String, Object> response = autorService.actualizarAutor(id, request);
         return ResponseEntity.ok(response);
     }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('BIBLIOTECARIO', 'ADMIN')")
+    @Operation(summary = "Eliminar un autor si no tiene libros asociados")
+    public ResponseEntity eliminarAutor(@PathVariable Long id) {
+        Map<String, String> response = autorService.eliminarAutor(id);
+        return ResponseEntity.ok(response);
+    }
 }

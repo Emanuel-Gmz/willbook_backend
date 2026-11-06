@@ -3,9 +3,11 @@ package edu.willbook_backend.service.impl;
 import edu.willbook_backend.dto.AutorCreateDTO;
 import edu.willbook_backend.dto.AutorResponseDTO;
 import edu.willbook_backend.dto.AutorUpdateDTO;
+import edu.willbook_backend.exception.AutorConLibrosException;
 import edu.willbook_backend.exception.AutorDuplicadoException;
 import edu.willbook_backend.model.Autor;
 import edu.willbook_backend.repository.AutorRepository;
+import edu.willbook_backend.repository.LibroRepository;
 import edu.willbook_backend.service.AutorService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,6 +23,7 @@ import java.util.Map;
 public class AutorServiceImpl implements AutorService {
 
     private final AutorRepository autorRepository;
+    private final LibroRepository libroRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -108,5 +111,24 @@ public class AutorServiceImpl implements AutorService {
                         actualizado.getPaisOrigen()
                 )
         );
+    }
+
+    @Override
+    @Transactional
+    public Map<String, String> eliminarAutor(Long id) {
+        Autor autor = autorRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Autor no encontrado"));
+
+        // Regla de integridad: Validar si tiene libros asociados activos (Escenario 2)
+        if (libroRepository.existsByAutorId(autor.getId())) {
+            throw new AutorConLibrosException(
+                    "No se puede eliminar el autor porque tiene libros asociados en el catálogo. Debe reasignarlos o borrarlos primero"
+            );
+        }
+
+        // Si no tiene libros, se elimina definitivamente (Escenario 1)
+        autorRepository.delete(autor);
+
+        return Map.of("message", "Autor eliminado correctamente");
     }
 }
