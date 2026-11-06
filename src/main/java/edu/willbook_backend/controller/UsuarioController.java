@@ -19,7 +19,7 @@ public class UsuarioController {
     private final UsuarioService usuarioService;
 
     @PatchMapping("/cambiar-password")
-    @Operation(summary = "Cambiar la contraseña")
+    @Operation(summary = "Cambiar la contraseña.")
     public ResponseEntity cambiarPassword(
             @Valid @RequestBody CambiarPasswordRequest request,
             Principal connectedUser
