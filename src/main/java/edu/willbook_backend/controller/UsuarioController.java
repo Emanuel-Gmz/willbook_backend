@@ -1,5 +1,7 @@
 package edu.willbook_backend.controller;
 
+import edu.willbook_backend.dto.PerfilResponseDTO;
+import edu.willbook_backend.dto.PerfilUpdateDTO;
 import edu.willbook_backend.security.dto.CambiarPasswordRequest;
 import edu.willbook_backend.service.UsuarioService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,5 +29,19 @@ public class UsuarioController {
         usuarioService.cambiarPassword(request, connectedUser);
 
         return ResponseEntity.ok(Map.of("message", "Contraseña actualizada correctamente"));
+    }
+
+    @PutMapping("/perfil")
+    @Operation(summary = "Actualizar perfil")
+    public ResponseEntity actualizarPerfil(
+            @Valid @RequestBody PerfilUpdateDTO request,
+            Principal connectedUser
+    ) {
+        PerfilResponseDTO perfilActualizado = usuarioService.actualizarPerfil(connectedUser.getName(), request);
+
+        return ResponseEntity.ok(Map.of(
+                "message", "Perfil actualizado con éxito",
+                "perfil", perfilActualizado
+        ));
     }
 }
