@@ -120,4 +120,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity handleMultaYaProcesada(MultaYaProcesadaException ex) {
         return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), null);
     }
+
+    @ExceptionHandler(MultaNoActivaException.class)
+    public ResponseEntity handleMultaNoActiva(MultaNoActivaException ex) {
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), null);
+    }
 }
