@@ -6,4 +6,5 @@ import java.security.Principal;
 
 public interface UsuarioService {
     void cambiarPassword(CambiarPasswordRequest request, Principal connectedUser);
+
 }

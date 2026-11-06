@@ -13,4 +13,5 @@ public record CambiarPasswordRequest(
 
         @NotBlank(message = "La confirmación de la contraseña es obligatoria")
         String confirmationPassword
+
 ) {}
