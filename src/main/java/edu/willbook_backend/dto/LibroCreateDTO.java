@@ -9,9 +9,8 @@ public record LibroCreateDTO(
         @Size(max = 150, message = "El título no puede superar los 150 caracteres")
         String titulo,
 
-        @NotBlank(message = "Este campo es requerido")
-        @Size(max = 150, message = "El autor no puede superar los 150 caracteres")
-        String autor,
+        @NotNull(message = "Debe seleccionar un autor")
+        Long autorId,
 
         @NotBlank(message = "Este campo es requerido")
         @Size(max = 20, message = "El ISBN no puede superar los 20 caracteres")
@@ -23,9 +22,8 @@ public record LibroCreateDTO(
         @NotNull(message = "Este campo es requerido")
         Integer anioPublicacion,
 
-        @NotBlank(message = "Este campo es requerido")
-        @Size(max = 50, message = "La categoría no puede superar los 50 caracteres")
-        String categoria,
+        @NotNull(message = "Debe seleccionar una categoría")
+        Long categoriaId,
 
         String portadaUrl,
 

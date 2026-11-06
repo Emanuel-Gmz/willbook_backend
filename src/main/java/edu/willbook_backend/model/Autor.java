@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.util.List;
 
 @Entity
 @Table(name = "autores")
@@ -26,6 +27,9 @@ public class Autor {
     @Column(length = 500)
     private String biografia;
 
-    @Column(length = 50)
-    private String paisOrigen;
+    @Column(name = "nacionalidad", length = 50) // Ajustado al campo de tu diagrama
+    private String nacionalidad;
+
+    @OneToMany(mappedBy = "autor", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Libro> libros;
 }
