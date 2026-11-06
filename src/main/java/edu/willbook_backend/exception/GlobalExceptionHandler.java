@@ -90,4 +90,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity handleAutorConLibrosAsociados(AutorConLibrosException ex) {
         return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), null);
     }
+
+    @ExceptionHandler(AutorNoEncontradoException.class)
+    public ResponseEntity handleAutorNoEncontrado(AutorNoEncontradoException ex) {
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), null);
+    }
+
+    @ExceptionHandler(CategoriaNoEncontradaException.class)
+    public ResponseEntity handleCategoriaNoEncontrado(CategoriaNoEncontradaException ex) {
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), null);
+    }
 }
