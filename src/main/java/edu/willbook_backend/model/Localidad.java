@@ -22,4 +22,7 @@ public class Localidad {
 
     @Column(nullable = false, length = 50)
     private String provincia;
+
+    @Column(name = "direccion_sucursal", length = 150)
+    private String direccionSucursal;
 }
