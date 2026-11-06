@@ -1,6 +1,7 @@
 package edu.willbook_backend.model;
 
 import edu.willbook_backend.enums.EstadoMulta;
+import edu.willbook_backend.enums.MetodoPago;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -44,4 +45,11 @@ public class Multa {
 
     @Column(nullable = false, length = 250)
     private String motivo;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "metodo_pago", length = 50)
+    private MetodoPago metodoPago;
+
+    @Column(name = "fecha_pago")
+    private LocalDateTime fechaPago;
 }
