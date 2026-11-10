@@ -1,9 +1,9 @@
-package willbook.backend;
+package edu.willbook_backend;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
+@SpringBootTest(classes = BackendApplication.class) // <-- Agrega esto
 class BackendApplicationTests {
 
 	@Test
