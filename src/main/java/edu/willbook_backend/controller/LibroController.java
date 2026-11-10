@@ -78,4 +78,11 @@ public class LibroController {
         Map<String, Object> response = libroService.agregarEjemplar(id, request.codigoInventario());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('BIBLIOTECARIO', 'ADMIN')")
+    @Operation(summary = "Eliminar un libro y sus ejemplares disponibles")
+    public ResponseEntity eliminarLibro(@PathVariable Long id) {
+        return ResponseEntity.ok(libroService.eliminarLibro(id));
+    }
 }

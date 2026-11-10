@@ -198,4 +198,24 @@ public class LibroServiceImpl implements LibroService {
                 "ejemplar", new EjemplarResponseDTO(guardado.getId(), guardado.getCodigoInventario(), guardado.getEstado())
         );
     }
+
+    @Override
+    @Transactional
+    public Map<String, String> eliminarLibro(Long id) {
+        Libro libro = libroRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Libro no encontrado"));
+
+        List<Ejemplar> ejemplares = ejemplarRepository.findByLibroId(id);
+        boolean enUso = ejemplares.stream()
+                .anyMatch(e -> e.getEstado() == EstadoEjemplar.PRESTADO || e.getEstado() == EstadoEjemplar.RESERVADO);
+
+        if (enUso) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "No se puede eliminar un libro que tiene ejemplares actualmente prestados o reservados.");
+        }
+
+        ejemplarRepository.deleteAll(ejemplares);
+        libroRepository.delete(libro);
+
+        return Map.of("message", "Libro eliminado correctamente del catálogo");
+    }
 }
