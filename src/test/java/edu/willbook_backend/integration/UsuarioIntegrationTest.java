@@ -15,7 +15,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Transactional
-class UsuarioRepositoryIntegrationTest extends BaseIntegrationTest {
+class UsuarioIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private UsuarioRepository usuarioRepository;

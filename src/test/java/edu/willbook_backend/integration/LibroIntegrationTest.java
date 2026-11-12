@@ -16,7 +16,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Transactional
-class LibroRepositoryIntegrationTest extends BaseIntegrationTest {
+class LibroIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private LibroRepository libroRepository;

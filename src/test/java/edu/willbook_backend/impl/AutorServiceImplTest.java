@@ -15,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -57,7 +58,17 @@ class AutorServiceImplTest {
     }
 
     @Test
-    void listarOFiltrarAutoresConQuery() {
+    void listarOFiltrarAutoresConQueryBlanco() {
+        when(autorRepository.findAllByOrderByApellidoAscNombreAsc()).thenReturn(List.of(autor));
+
+        List<AutorResponseDTO> lista = servicio.listarOFiltrarAutores("   ");
+
+        assertEquals(1, lista.size());
+        verify(autorRepository).findAllByOrderByApellidoAscNombreAsc();
+    }
+
+    @Test
+    void listarOFiltrarAutoresConQueryValido() {
         when(autorRepository.buscarPorNombreOApellido("Gabriel")).thenReturn(List.of(autor));
 
         List<AutorResponseDTO> lista = servicio.listarOFiltrarAutores("  Gabriel  ");
@@ -97,13 +108,62 @@ class AutorServiceImplTest {
 
     @Test
     void actualizarAutorExitoso() {
-        AutorUpdateDTO dto = new AutorUpdateDTO("Gabriel Modificado", null, null, null);
+        AutorUpdateDTO dto = new AutorUpdateDTO("Gabriel Modificado", "Nuevo Apellido", "Mexicana", "Nueva bio");
         when(autorRepository.findById(1L)).thenReturn(Optional.of(autor));
-        when(autorRepository.existsByNombreIgnoreCaseAndApellidoIgnoreCase("Gabriel Modificado", "García Márquez")).thenReturn(false);
+        when(autorRepository.existsByNombreIgnoreCaseAndApellidoIgnoreCase("Gabriel Modificado", "Nuevo Apellido")).thenReturn(false);
         when(autorRepository.save(any())).thenReturn(autor);
 
         Map<String, Object> resp = servicio.actualizarAutor(1L, dto);
         assertEquals("Autor actualizado correctamente", resp.get("message"));
+    }
+
+    @Test
+    void actualizarAutorMismoNombreYApellidoNoVerificaDuplicado() {
+        // Actualiza biografía y nacionalidad manteniendo nombre y apellido iguales
+        AutorUpdateDTO dto = new AutorUpdateDTO("Gabriel", "García Márquez", "Mexicana", "Bio actualizada");
+        when(autorRepository.findById(1L)).thenReturn(Optional.of(autor));
+        when(autorRepository.save(any())).thenReturn(autor);
+
+        Map<String, Object> resp = servicio.actualizarAutor(1L, dto);
+        assertEquals("Autor actualizado correctamente", resp.get("message"));
+        verify(autorRepository, never()).existsByNombreIgnoreCaseAndApellidoIgnoreCase(anyString(), anyString());
+    }
+
+    @Test
+    void actualizarAutorCamposNulosOBlancoNoModificaNiDuplica() {
+        AutorUpdateDTO dto = new AutorUpdateDTO(null, "   ", null, null);
+        when(autorRepository.findById(1L)).thenReturn(Optional.of(autor));
+        when(autorRepository.save(any())).thenReturn(autor);
+
+        Map<String, Object> resp = servicio.actualizarAutor(1L, dto);
+        assertEquals("Autor actualizado correctamente", resp.get("message"));
+    }
+
+    @Test
+    void actualizarAutorNoEncontradoLanza404() {
+        when(autorRepository.findById(99L)).thenReturn(Optional.empty());
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () ->
+                servicio.actualizarAutor(99L, new AutorUpdateDTO("A", "B", "C", "D"))
+        );
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
+    }
+
+    @Test
+    void actualizarAutorDuplicadoLanzaExcepcion() {
+        AutorUpdateDTO dto = new AutorUpdateDTO("Duplicado", "Autor", null, null);
+        when(autorRepository.findById(1L)).thenReturn(Optional.of(autor));
+        when(autorRepository.existsByNombreIgnoreCaseAndApellidoIgnoreCase("Duplicado", "Autor")).thenReturn(true);
+
+        assertThrows(AutorDuplicadoException.class, () -> servicio.actualizarAutor(1L, dto));
+    }
+
+    @Test
+    void eliminarAutorNoEncontradoLanza404() {
+        when(autorRepository.findById(99L)).thenReturn(Optional.empty());
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> servicio.eliminarAutor(99L));
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
     }
 
     @Test

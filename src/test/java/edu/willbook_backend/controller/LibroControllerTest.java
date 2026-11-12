@@ -159,4 +159,14 @@ class LibroControllerTest {
 
         verify(libroService).eliminarLibro(1L);
     }
+
+    @Test
+    void buscarConQueryConResultadosRetornaLista() throws Exception {
+        when(libroService.buscarLibros("Cien")).thenReturn(List.of(libroEjemplo()));
+
+        mvc.perform(get("/api/v1/catalogo").param("q", "Cien"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].titulo").value("Cien años de soledad"));
+    }
 }

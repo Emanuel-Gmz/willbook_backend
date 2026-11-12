@@ -19,7 +19,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Transactional
-class MultaRepositoryIntegrationTest extends BaseIntegrationTest {
+class MultaIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private MultaRepository multaRepository;
