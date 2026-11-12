@@ -1,4 +1,4 @@
-package willbook.backend.controller;
+package edu.willbook_backend.controller;
 
 import edu.willbook_backend.controller.AutorController;
 import edu.willbook_backend.dto.AutorCreateDTO;

@@ -1,4 +1,4 @@
-package willbook.backend.security.jwt;
+package edu.willbook_backend.security.jwt;
 
 import edu.willbook_backend.enums.Rol;
 import edu.willbook_backend.model.Usuario;

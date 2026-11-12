@@ -1,4 +1,4 @@
-package willbook.backend.security.auth;
+package edu.willbook_backend.security.auth;
 
 import edu.willbook_backend.dto.RegisterRequestDTO;
 import edu.willbook_backend.enums.Rol;

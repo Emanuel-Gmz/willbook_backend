@@ -1,4 +1,4 @@
-package willbook.backend.controller;
+package edu.willbook_backend.controller;
 
 import edu.willbook_backend.controller.PrestamoController;
 import edu.willbook_backend.dto.PrestamoResponseDTO;

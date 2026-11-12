@@ -1,4 +1,4 @@
-package willbook.backend.service.impl;
+package edu.willbook_backend.impl;
 
 import edu.willbook_backend.enums.EstadoEjemplar;
 import edu.willbook_backend.exception.EjemplarPrestadoException;

@@ -1,4 +1,4 @@
-package willbook.backend.controller;
+package edu.willbook_backend.controller;
 
 import edu.willbook_backend.controller.AnuncioController;
 import edu.willbook_backend.dto.AnuncioCreateDTO;

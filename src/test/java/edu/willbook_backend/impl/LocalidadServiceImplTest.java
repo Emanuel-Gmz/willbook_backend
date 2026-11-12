@@ -1,4 +1,4 @@
-package willbook.backend.service.impl;
+package edu.willbook_backend.impl;
 
 import edu.willbook_backend.dto.LocalidadResponseDTO;
 import edu.willbook_backend.model.Localidad;
