@@ -23,7 +23,6 @@ class PasswordResetTokenTest {
         assertEquals(usuario, token.getUsuario());
         assertEquals(ahora, token.getExpiryDate());
 
-        // Test constructor con argumentos (si Lombok lo genera o constructor manual)
         PasswordResetToken tokenArgs = PasswordResetToken.builder()
                 .id(1L)
                 .token("token-xyz")
@@ -33,5 +32,27 @@ class PasswordResetTokenTest {
 
         assertNotNull(tokenArgs);
         assertEquals("token-xyz", tokenArgs.getToken());
+    }
+
+    @Test
+    void testIsExpiredTrueCuandoLaFechaEsPasada() {
+        // Token que expiró hace 10 minutos
+        LocalDateTime fechaPasada = LocalDateTime.now().minusMinutes(10);
+        PasswordResetToken token = PasswordResetToken.builder()
+                .expiryDate(fechaPasada)
+                .build();
+
+        assertTrue(token.isExpired());
+    }
+
+    @Test
+    void testIsExpiredFalseCuandoLaFechaEsFutura() {
+        // Token que expira en 10 minutos más
+        LocalDateTime fechaFutura = LocalDateTime.now().plusMinutes(10);
+        PasswordResetToken token = PasswordResetToken.builder()
+                .expiryDate(fechaFutura)
+                .build();
+
+        assertFalse(token.isExpired());
     }
 }

@@ -1,6 +1,5 @@
 package edu.willbook_backend.controller;
 
-import edu.willbook_backend.controller.CategoriaController;
 import edu.willbook_backend.dto.CategoriaCreateDTO;
 import edu.willbook_backend.dto.CategoriaResponseDTO;
 import edu.willbook_backend.exception.GlobalExceptionHandler;
@@ -19,9 +18,9 @@ import java.util.List;
 import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -65,5 +64,29 @@ class CategoriaControllerTest {
                         .content(json))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.message").value("Categoría creada"));
+    }
+
+    @Test
+    void actualizarCategoriaDevuelveOk() throws Exception {
+        when(categoriaService.actualizarCategoria(eq(1L), any(CategoriaCreateDTO.class)))
+                .thenReturn(Map.of("message", "Categoría actualizada correctamente"));
+
+        String json = "{\"nombre\":\"Ficción Actualizada\",\"descripcion\":\"Nueva descripción\"}";
+
+        mvc.perform(put("/api/v1/categorias/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Categoría actualizada correctamente"));
+    }
+
+    @Test
+    void eliminarCategoriaDevuelveOk() throws Exception {
+        when(categoriaService.eliminarCategoria(1L))
+                .thenReturn(Map.of("message", "Categoría eliminada correctamente"));
+
+        mvc.perform(delete("/api/v1/categorias/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Categoría eliminada correctamente"));
     }
 }

@@ -43,57 +43,54 @@ class HomeControllerTest {
     }
 
     @Test
-    void obtenerInicioParaLectorDevuelveOk() throws Exception {
-        Usuario lector = Usuario.builder()
-                .email("lector@willbook.com")
-                .rol(Rol.LECTOR)
-                .build();
-
+    void obtenerInicioLectorDevuelveCatalogo() throws Exception {
         when(principal.getName()).thenReturn("lector@willbook.com");
+        Usuario lector = Usuario.builder().id(1L).email("lector@willbook.com").rol(Rol.LECTOR).build();
         when(usuarioRepository.findByEmail("lector@willbook.com")).thenReturn(Optional.of(lector));
 
         mvc.perform(get("/api/v1/home").principal(principal))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.vista").value("CATALOGO"))
-                .andExpect(jsonPath("$.mensaje").value("Bienvenido al catálogo de libros de WillBook"));
+                .andExpect(jsonPath("$.vista").value("CATALOGO"));
     }
 
     @Test
-    void obtenerInicioParaAdminDevuelveOk() throws Exception {
-        Usuario admin = Usuario.builder()
-                .email("admin@willbook.com")
-                .rol(Rol.ADMIN)
-                .build();
-
+    void obtenerInicioAdminDevuelveDashboard() throws Exception {
         when(principal.getName()).thenReturn("admin@willbook.com");
+        Usuario admin = Usuario.builder().id(2L).email("admin@willbook.com").rol(Rol.ADMIN).build();
         when(usuarioRepository.findByEmail("admin@willbook.com")).thenReturn(Optional.of(admin));
 
         mvc.perform(get("/api/v1/home").principal(principal))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.vista").value("DASHBOARD"))
-                .andExpect(jsonPath("$.mensaje").value("Panel de control administrativo"));
+                .andExpect(jsonPath("$.vista").value("DASHBOARD"));
     }
 
     @Test
-    void obtenerInicioParaBibliotecarioDevuelveOk() throws Exception {
-        Usuario biblio = Usuario.builder()
-                .email("biblio@willbook.com")
-                .rol(Rol.BIBLIOTECARIO)
-                .build();
-
+    void obtenerInicioBibliotecarioDevuelveDashboard() throws Exception {
         when(principal.getName()).thenReturn("biblio@willbook.com");
+        Usuario biblio = Usuario.builder().id(3L).email("biblio@willbook.com").rol(Rol.BIBLIOTECARIO).build();
         when(usuarioRepository.findByEmail("biblio@willbook.com")).thenReturn(Optional.of(biblio));
 
         mvc.perform(get("/api/v1/home").principal(principal))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.vista").value("DASHBOARD"));
     }
 
     @Test
-    void obtenerInicioUsuarioNoEncontradoDevuelve404() throws Exception {
+    void obtenerInicioUsuarioNoEncontradoLanza404() throws Exception {
         when(principal.getName()).thenReturn("noexiste@willbook.com");
         when(usuarioRepository.findByEmail("noexiste@willbook.com")).thenReturn(Optional.empty());
 
         mvc.perform(get("/api/v1/home").principal(principal))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void obtenerInicioRolNoAutorizadoLanza403() throws Exception {
+        when(principal.getName()).thenReturn("otro@willbook.com");
+        Usuario usuarioSinRolValido = Usuario.builder().id(4L).email("otro@willbook.com").rol(null).build();
+        when(usuarioRepository.findByEmail("otro@willbook.com")).thenReturn(Optional.of(usuarioSinRolValido));
+
+        mvc.perform(get("/api/v1/home").principal(principal))
+                .andExpect(status().isForbidden());
     }
 }
