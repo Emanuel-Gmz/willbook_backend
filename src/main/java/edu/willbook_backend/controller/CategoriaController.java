@@ -36,4 +36,23 @@ public class CategoriaController {
         Map<String, Object> response = categoriaService.crearCategoria(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('BIBLIOTECARIO', 'ADMIN')")
+    @Operation(summary = "Modificar una categoría existente")
+    public ResponseEntity actualizarCategoria(
+            @PathVariable Long id,
+            @Valid @RequestBody CategoriaCreateDTO request
+    ) {
+        Map<String, Object> response = categoriaService.actualizarCategoria(id, request);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('BIBLIOTECARIO', 'ADMIN')")
+    @Operation(summary = "Eliminar una categoría si no tiene libros asociados")
+    public ResponseEntity eliminarCategoria(@PathVariable Long id) {
+        Map<String, String> response = categoriaService.eliminarCategoria(id);
+        return ResponseEntity.ok(response);
+    }
 }

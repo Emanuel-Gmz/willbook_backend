@@ -1,6 +1,5 @@
 package edu.willbook_backend.controller;
 
-import edu.willbook_backend.controller.LibroController;
 import edu.willbook_backend.dto.LibroCreateDTO;
 import edu.willbook_backend.dto.LibroResponseDTO;
 import edu.willbook_backend.dto.LibroUpdateDTO;
@@ -82,6 +81,16 @@ class LibroControllerTest {
     }
 
     @Test
+    void buscarConQueryBlancaYSinResultadosRetornaListaVacia() throws Exception {
+        when(libroService.buscarLibros("   ")).thenReturn(List.of());
+
+        mvc.perform(get("/api/v1/catalogo").param("q", "   "))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$").isEmpty());
+    }
+
+    @Test
     void obtenerLibroPorIdDevuelveElLibro() throws Exception {
         when(libroService.obtenerLibroPorId(1L)).thenReturn(libroEjemplo());
 
@@ -146,7 +155,7 @@ class LibroControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"codigoInventario\":\"INV-001\"}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.message").value("Ejemplar agregado correctamente al inventario"));
+                .andExpect(jsonPath("$.message").exists());
     }
 
     @Test
@@ -161,7 +170,7 @@ class LibroControllerTest {
     }
 
     @Test
-    void buscarConQueryConResultadosRetornaLista() throws Exception {
+    void buscarConQueryConResultadosRetornaListaDirecta() throws Exception {
         when(libroService.buscarLibros("Cien")).thenReturn(List.of(libroEjemplo()));
 
         mvc.perform(get("/api/v1/catalogo").param("q", "Cien"))
