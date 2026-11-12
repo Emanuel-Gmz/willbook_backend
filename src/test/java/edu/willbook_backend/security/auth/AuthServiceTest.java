@@ -11,7 +11,6 @@ import edu.willbook_backend.model.Usuario;
 import edu.willbook_backend.repository.LocalidadRepository;
 import edu.willbook_backend.repository.PasswordResetTokenRepository;
 import edu.willbook_backend.repository.UsuarioRepository;
-import edu.willbook_backend.security.auth.AuthService;
 import edu.willbook_backend.security.dto.AuthRequest;
 import edu.willbook_backend.security.dto.AuthResponse;
 import edu.willbook_backend.security.dto.OlvidoPasswordRequest;

@@ -2,8 +2,6 @@ package edu.willbook_backend.security.jwt;
 
 import edu.willbook_backend.enums.Rol;
 import edu.willbook_backend.model.Usuario;
-import edu.willbook_backend.security.jwt.JwtAuthFilter;
-import edu.willbook_backend.security.jwt.JwtService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -54,6 +52,14 @@ class JwtAuthFilterTest {
     @Test
     void sinHeaderAuthorizationPasaSinAutenticar() throws Exception {
         jwtAuthFilter.doFilter(pedido("/api/v1/catalogo", null), respuesta, cadena);
+        assertNotNull(cadena.getRequest());
+        verifyNoInteractions(jwtService);
+    }
+
+    @Test
+    void headerAuthorizationSinBearerIgnoraToken() throws Exception {
+        // Cubre la rama donde el header no comienza con "Bearer " (ej. Basic token)
+        jwtAuthFilter.doFilter(pedido("/api/v1/catalogo", "Basic dXNlcjpwYXNz"), respuesta, cadena);
         assertNotNull(cadena.getRequest());
         verifyNoInteractions(jwtService);
     }

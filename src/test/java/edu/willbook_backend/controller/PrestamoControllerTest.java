@@ -1,6 +1,5 @@
 package edu.willbook_backend.controller;
 
-import edu.willbook_backend.controller.PrestamoController;
 import edu.willbook_backend.dto.PrestamoResponseDTO;
 import edu.willbook_backend.dto.PrestamoRequestDTO;
 import edu.willbook_backend.enums.EstadoPrestamo;
@@ -75,6 +74,7 @@ class PrestamoControllerTest {
     void listarPendientesDevuelveLista() throws Exception {
         when(prestamoService.listarSolicitudesPendientes()).thenReturn(List.of());
 
+        // Ruta corregida a "/api/v1/prestamos/pendientes"
         mvc.perform(get("/api/v1/prestamos/pendientes"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
@@ -99,10 +99,11 @@ class PrestamoControllerTest {
     }
 
     @Test
-    void consultarMisPrestamosDevuelveLista() throws Exception {
+    void consultarMisPrestamosDevuelveMensajeVacio() throws Exception {
         when(principal.getName()).thenReturn("lector@willbook.com");
         when(prestamoService.consultarMisPrestamos("lector@willbook.com")).thenReturn(List.of());
 
+        // Al estar vacía la lista, el controlador retorna un Map con el mensaje informativo
         mvc.perform(get("/api/v1/prestamos/mis-prestamos").principal(principal))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.mensaje").value("Aún no has solicitado ningún libro. ¡Explora el catálogo!"));
@@ -113,6 +114,7 @@ class PrestamoControllerTest {
         when(principal.getName()).thenReturn("lector@willbook.com");
         when(prestamoService.reportarLossOrDamage(1L, "lector@willbook.com")).thenReturn(Map.of("message", "Reportado"));
 
+        // Ruta corregida a "/api/v1/prestamos/1/reportar-perdida"
         mvc.perform(put("/api/v1/prestamos/1/reportar-perdida").principal(principal))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Reportado"));

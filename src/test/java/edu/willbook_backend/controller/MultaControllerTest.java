@@ -1,10 +1,10 @@
 package edu.willbook_backend.controller;
 
-import edu.willbook_backend.controller.MultaController;
 import edu.willbook_backend.dto.MisMultasResponseDTO;
 import edu.willbook_backend.dto.MultaCancelacionDTO;
 import edu.willbook_backend.dto.MultaCreateDTO;
 import edu.willbook_backend.dto.MultaPagoDTO;
+import edu.willbook_backend.enums.MetodoPago;
 import edu.willbook_backend.exception.GlobalExceptionHandler;
 import edu.willbook_backend.service.MultaService;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,7 +18,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.security.Principal;
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -56,6 +55,7 @@ class MultaControllerTest {
 
         String json = "{\"usuarioId\":1,\"motivo\":\"Demora\",\"monto\":100.0}";
 
+        // Corregido de "/api/v1/multas/crear" a "/api/v1/multas"
         mvc.perform(post("/api/v1/multas")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
@@ -79,7 +79,6 @@ class MultaControllerTest {
         when(multaService.registrarPagoMulta(eq(1L), any(MultaPagoDTO.class)))
                 .thenReturn(Map.of("message", "Pago registrado exitosamente"));
 
-        // Enviamos el enum MetodoPago correcto que espera el DTO
         String json = "{\"metodoPago\":\"EFECTIVO\"}";
 
         mvc.perform(put("/api/v1/multas/1/pagar")

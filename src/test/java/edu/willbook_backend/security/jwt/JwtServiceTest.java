@@ -2,7 +2,6 @@ package edu.willbook_backend.security.jwt;
 
 import edu.willbook_backend.enums.Rol;
 import edu.willbook_backend.model.Usuario;
-import edu.willbook_backend.security.jwt.JwtService;
 import io.jsonwebtoken.ExpiredJwtException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,7 +31,7 @@ class JwtServiceTest {
     }
 
     @Test
-    void generaYExtraeUsernameDelToken() {
+    void generaYExtraeUsernameDelTokenConClaims() {
         String token = jwtService.generateToken(Map.of("rol", "LECTOR"), lector);
 
         assertEquals("emanuel@test.com", jwtService.extractUsername(token));
@@ -40,6 +39,14 @@ class JwtServiceTest {
 
         Usuario otroUsuario = Usuario.builder().email("otro@test.com").build();
         assertFalse(jwtService.isTokenValid(token, otroUsuario));
+    }
+
+    @Test
+    void generaYExtraeUsernameDelTokenSinClaims() {
+        String token = jwtService.generateToken(lector);
+
+        assertEquals("emanuel@test.com", jwtService.extractUsername(token));
+        assertTrue(jwtService.isTokenValid(token, lector));
     }
 
     @Test

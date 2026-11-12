@@ -16,7 +16,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Transactional // <-- Mantiene la sesión abierta para evitar LazyInitializationException
-class PrestamoRepositoryIntegrationTest extends BaseIntegrationTest {
+class PrestamoIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private PrestamoRepository prestamoRepository;

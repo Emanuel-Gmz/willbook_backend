@@ -1,5 +1,5 @@
 package edu.willbook_backend.impl;
-
+import edu.willbook_backend.exception.UsuarioNoEncontradoException;
 import edu.willbook_backend.model.Notificacion;
 import edu.willbook_backend.model.Usuario;
 import edu.willbook_backend.repository.NotificacionRepository;
@@ -19,13 +19,18 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class NotificacionServiceImplTest {
 
-    @Mock NotificacionRepository notificacionRepository;
-    @Mock UsuarioRepository usuarioRepository;
+    @Mock
+    NotificacionRepository notificacionRepository;
+
+    @Mock
+    UsuarioRepository usuarioRepository;
+
     @InjectMocks
     NotificacionServiceImpl servicio;
 
@@ -47,6 +52,17 @@ class NotificacionServiceImplTest {
         Map<String, Object> resp = servicio.obtenerBandejaNotificaciones("user@test.com");
 
         assertEquals(1L, resp.get("contadorNoLeidas"));
+        assertNotNull(resp.get("notificaciones"));
+    }
+
+    @Test
+    void obtenerBandejaUsuarioNoEncontradoDa404() {
+        when(usuarioRepository.findByEmail("noexiste@test.com")).thenReturn(Optional.empty());
+
+        // Esperamos UsuarioNoEncontradoException según la implementación real
+        assertThrows(UsuarioNoEncontradoException.class, () -> {
+            servicio.obtenerBandejaNotificaciones("noexiste@test.com");
+        });
     }
 
     @Test
@@ -58,5 +74,39 @@ class NotificacionServiceImplTest {
 
         assertEquals("Notificación marcada como leida", resp.get("message"));
         assertTrue(notificacion.getLeida());
+        verify(notificacionRepository).save(notificacion);
+    }
+
+    @Test
+    void marcarComoLeidaNotificacionInexistenteDa404() {
+        when(notificacionRepository.findById(99L)).thenReturn(Optional.empty());
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> {
+            servicio.marcarComoLeida(99L, "user@test.com");
+        });
+
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
+    }
+
+    @Test
+    void marcarTodasComoLeidasExitoso() {
+        when(usuarioRepository.findByEmail("user@test.com")).thenReturn(Optional.of(usuario));
+        when(notificacionRepository.findByUsuarioIdAndLeidaFalse(1L)).thenReturn(List.of(notificacion));
+
+        Map<String, Object> resp = servicio.marcarTodasComoLeidas("user@test.com");
+
+        assertNotNull(resp);
+        assertTrue(notificacion.getLeida());
+        verify(notificacionRepository, atLeastOnce()).save(any(Notificacion.class));
+    }
+
+    @Test
+    void marcarTodasComoLeidasUsuarioNoEncontradoDa404() {
+        when(usuarioRepository.findByEmail("noexiste@test.com")).thenReturn(Optional.empty());
+
+        // Esperamos UsuarioNoEncontradoException según la implementación real
+        assertThrows(UsuarioNoEncontradoException.class, () -> {
+            servicio.marcarTodasComoLeidas("noexiste@test.com");
+        });
     }
 }
