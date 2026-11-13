@@ -29,6 +29,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -162,6 +163,21 @@ class AuthServiceTest {
         });
     }
 
+    @Test
+    void registrarLocalidadNoEncontradaLanza404() {
+        RegisterRequestDTO dto = crearRegistroDTO();
+        when(usuarioRepository.existsByDni(dto.dni())).thenReturn(false);
+        when(usuarioRepository.existsByEmail(dto.email())).thenReturn(false);
+        when(localidadRepository.findById(dto.localidadId())).thenReturn(Optional.empty());
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> {
+            authService.register(dto);
+        });
+
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
+        assertEquals("Localidad no encontrada", ex.getReason());
+    }
+
     // ---------- Request Password Reset (Olvido de contraseña) ----------
 
     @Test
@@ -186,5 +202,51 @@ class AuthServiceTest {
 
         verify(resetTokenRepository).save(any(PasswordResetToken.class));
         verify(emailService).sendPasswordResetEmail(eq("emanuel@test.com"), anyString());
+    }
+
+    @Test
+    void solicitarRecuperacionPasswordConTokenRecienteLanzaTooManyRequests() {
+        OlvidoPasswordRequest request = new OlvidoPasswordRequest("emanuel@test.com");
+        // Token creado recientemente (expira en 14 minutos, por lo que su creación fue hace 1 minuto)
+        PasswordResetToken tokenReciente = PasswordResetToken.builder()
+                .expiryDate(LocalDateTime.now().plusMinutes(14))
+                .build();
+        when(resetTokenRepository.findByUsuario(lector)).thenReturn(Optional.of(tokenReciente));
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> {
+            authService.requestPasswordReset(request);
+        });
+
+        assertEquals(HttpStatus.TOO_MANY_REQUESTS, ex.getStatusCode());
+    }
+
+    @Test
+    void solicitarRecuperacionPasswordConTokenAntiguoPermiteNuevoToken() {
+        OlvidoPasswordRequest request = new OlvidoPasswordRequest("emanuel@test.com");
+        // Token antiguo (expira en 1 minuto, su creación fue hace 14 minutos)
+        PasswordResetToken tokenAntiguo = PasswordResetToken.builder()
+                .expiryDate(LocalDateTime.now().plusMinutes(1))
+                .build();
+        when(resetTokenRepository.findByUsuario(lector)).thenReturn(Optional.of(tokenAntiguo));
+
+        assertDoesNotThrow(() -> {
+            authService.requestPasswordReset(request);
+        });
+
+        verify(resetTokenRepository).deleteByUsuario(lector);
+        verify(resetTokenRepository).save(any(PasswordResetToken.class));
+    }
+
+    @Test
+    void solicitarRecuperacionPasswordFalloEnvioCorreoLanzaTooManyRequests() {
+        OlvidoPasswordRequest request = new OlvidoPasswordRequest("emanuel@test.com");
+        when(resetTokenRepository.findByUsuario(lector)).thenReturn(Optional.empty());
+        doThrow(new RuntimeException("Error SMTP")).when(emailService).sendPasswordResetEmail(anyString(), anyString());
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> {
+            authService.requestPasswordReset(request);
+        });
+
+        assertEquals(HttpStatus.TOO_MANY_REQUESTS, ex.getStatusCode());
     }
 }

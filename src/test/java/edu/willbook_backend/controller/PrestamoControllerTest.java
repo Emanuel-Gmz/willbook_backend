@@ -119,4 +119,20 @@ class PrestamoControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Reportado"));
     }
+
+    @Test
+    void consultarMisPrestamosDevuelveListaConElementos() throws Exception {
+        when(principal.getName()).thenReturn("lector@willbook.com");
+        var prestamoMock = new edu.willbook_backend.dto.PrestamoPersonalDTO(
+                1L, 1L, "Libro Test", "url", "INV-001",
+                java.time.LocalDateTime.now(), null, null, null,
+                edu.willbook_backend.enums.EstadoPrestamo.PRESTADO, "Vigente", false
+        );
+        when(prestamoService.consultarMisPrestamos("lector@willbook.com")).thenReturn(List.of(prestamoMock));
+
+        mvc.perform(get("/api/v1/prestamos/mis-prestamos").principal(principal))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].idPrestamo").value(1));
+    }
 }

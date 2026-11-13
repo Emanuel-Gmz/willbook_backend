@@ -104,4 +104,13 @@ class MultaControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.cuentaRestringida").value(false));
     }
+
+    @Test
+    void cancelarMultaConRequestNuloDevuelveOk() throws Exception {
+        when(multaService.cancelarMulta(eq(1L), any(MultaCancelacionDTO.class))).thenReturn(Map.of("message", "Multa cancelada"));
+
+        mvc.perform(put("/api/v1/multas/1/cancelar"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Multa cancelada"));
+    }
 }
